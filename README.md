@@ -54,8 +54,8 @@ No need to install MongoDB locally.
 Clone the repository:
 
 ```bash
-git clone <repository-url>
-cd docsai
+git clone https://github.com/mahmoudrabbas/documind-ai
+cd documind-ai
 ```
 
 ---
