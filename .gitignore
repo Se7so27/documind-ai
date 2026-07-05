@@ -1,4 +1,4 @@
 project_dump.txt
 
-# dependencies
-node_modules
+node_modules/
+**/node_modules/
