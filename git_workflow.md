@@ -36,7 +36,7 @@ documind-ai/
 **Decision: Trunk-based development with short-lived feature branches**, not long-lived Git Flow-style `develop`/`release` branches.
 
 ```
-main                          ← always deployable; protected
+master                          ← always deployable; protected
  ├── feature/T2.3.1-tenant-scoping-middleware
  ├── feature/T4.2.3-ocr-arabic-pipeline
  ├── fix/T5.3.4-refusal-threshold-off-by-one
@@ -44,9 +44,9 @@ main                          ← always deployable; protected
 ```
 
 **Reasoning:**
-- Given the project's own sprint structure (2–3 day sprints, dependency chains where one dev's output unblocks the next), branches need to merge back into `main` fast — within a day or two, not sit open for a week. A `develop` branch (classic Git Flow) adds a second long-lived integration point that has to be kept in sync with `main`, which is unnecessary overhead for a team this size shipping this frequently.
-- Short-lived branches directly serve the "minimize merge conflicts" requirement from sprint planning: the longer a branch lives, the more `main` drifts underneath it, and the worse the eventual merge conflict. Branches scoped to a single Technical Task (1–2.5 days each, per the task breakdown) naturally stay short.
-- `main` is kept always-deployable via required CI checks + PR review (Section 8), so there's no need for a separate "stable" branch — `main` *is* the stable branch.
+- Given the project's own sprint structure (2–3 day sprints, dependency chains where one dev's output unblocks the next), branches need to merge back into `master` fast — within a day or two, not sit open for a week. A `develop` branch (classic Git Flow) adds a second long-lived integration point that has to be kept in sync with `master`, which is unnecessary overhead for a team this size shipping this frequently.
+- Short-lived branches directly serve the "minimize merge conflicts" requirement from sprint planning: the longer a branch lives, the more `master` drifts underneath it, and the worse the eventual merge conflict. Branches scoped to a single Technical Task (1–2.5 days each, per the task breakdown) naturally stay short.
+- `master` is kept always-deployable via required CI checks + PR review (Section 8), so there's no need for a separate "stable" branch — `master` *is* the stable branch.
 - One branch per Technical Task ID (not per developer, not per Epic) keeps branch scope matched to PR scope matched to issue scope — a direct line from the GitHub Issues backlog to the branch that closes it.
 
 ---
@@ -54,20 +54,20 @@ main                          ← always deployable; protected
 ## 3. Git Flow (Day-to-Day Developer Workflow)
 
 ```
-1. git checkout main && git pull origin main
+1. git checkout master && git pull origin master
 2. git checkout -b feature/T4.2.5-semantic-chunking
 3. ... commit work in small, logical commits ...
 4. git push origin feature/T4.2.5-semantic-chunking
-5. Open PR → target: main
+5. Open PR → target: master
 6. CI runs (lint, typecheck, unit tests, build)
 7. Request review from 1+ teammate
 8. Address feedback → push additional commits
-9. Squash-merge into main (see Section 8)
+9. Squash-merge into master (see Section 8)
 10. Delete feature branch (local + remote)
 ```
 
 **Reasoning:**
-- Rebasing onto `main` before opening the PR (`git pull --rebase origin main`) is required when `main` has moved, rather than merging `main` into the feature branch — this keeps history linear and avoids merge-commit noise inside feature branches, making PR diffs easier to review.
+- Rebasing onto `master` before opening the PR (`git pull --rebase origin master`) is required when `master` has moved, rather than merging `master` into the feature branch — this keeps history linear and avoids merge-commit noise inside feature branches, making PR diffs easier to review.
 - Step 9 (delete branch after merge) is not just tidiness — with 6 developers each potentially having 2–4 branches per sprint, stale branches make it hard to tell what's actually in flight, which directly undermines the "avoid blockers" goal from sprint planning: someone can't tell if `feature/T4.2.5-...` is done, abandoned, or still active.
 - This flow assumes CI is fast (under ~5 minutes) — see Section 9 — since developers are expected to wait for it before requesting review, not after merge.
 
@@ -82,7 +82,7 @@ main                          ← always deployable; protected
 | Type | Use for | Example |
 |---|---|---|
 | `feature/` | New functionality (maps to a Technical Task) | `feature/T5.3.5-citation-verification` |
-| `fix/` | Bug fix on `main` | `fix/T4.1.3-upload-mime-validation` |
+| `fix/` | Bug fix on `master` | `fix/T4.1.3-upload-mime-validation` |
 | `hotfix/` | Urgent production fix (see Section 11) | `hotfix/prod-jwt-refresh-race` |
 | `chore/` | Tooling, config, deps, no product behavior change | `chore/upgrade-mongoose-8` |
 | `docs/` | Documentation only | `docs/api-v1-swagger` |
@@ -228,34 +228,34 @@ Used by reviewers before approving any PR:
 
 ## 8. Merge Strategy
 
-**Decision: Squash-and-merge into `main`, for every PR, no exceptions.**
+**Decision: Squash-and-merge into `master`, for every PR, no exceptions.**
 
 ```
 feature/T5.3.5-citation-verification (4 commits: wip, wip, fix typo, address review)
                         │
                         ▼ squash-merge
-main: 1 commit — "feat(citations): add claim-to-chunk citation verification (#87)"
+master: 1 commit — "feat(citations): add claim-to-chunk citation verification (#87)"
 ```
 
 **Reasoning:**
-- Feature branches inevitably accumulate "wip", "fix lint", "address review comments" commits during development — these are useful *during* review but are noise in `main`'s permanent history. Squashing keeps `main`'s log at one commit per shippable unit of work, which is exactly the granularity Conventional Commits + automated changelogs need (Section 5, 12).
-- Squash-merge preserves a clean, revertable history: `git revert <sha>` on `main` cleanly undoes one whole feature/fix, rather than requiring reverting a chain of 4 messy commits.
-- Rejected alternative — **merge commits** (`--no-ff`): preserves branch topology but clutters `main` with merge-commit noise and makes `git bisect` harder across a 6-person team's overlapping branches.
+- Feature branches inevitably accumulate "wip", "fix lint", "address review comments" commits during development — these are useful *during* review but are noise in `master`'s permanent history. Squashing keeps `master`'s log at one commit per shippable unit of work, which is exactly the granularity Conventional Commits + automated changelogs need (Section 5, 12).
+- Squash-merge preserves a clean, revertable history: `git revert <sha>` on `master` cleanly undoes one whole feature/fix, rather than requiring reverting a chain of 4 messy commits.
+- Rejected alternative — **merge commits** (`--no-ff`): preserves branch topology but clutters `master` with merge-commit noise and makes `git bisect` harder across a 6-person team's overlapping branches.
 - Rejected alternative — **rebase-and-merge** (replay individual commits): would preserve granular history, but only if developers are disciplined about atomic, well-messaged commits *during* development — which is a nice aspiration but not realistic to enforce under sprint deadlines. Squash gets the same clean-history benefit without requiring that discipline.
-- **Branch protection rules on `main`** (enforced in GitHub settings) that make this work:
-  - Require PR before merging (no direct pushes to `main`, including for admins)
+- **Branch protection rules on `master`** (enforced in GitHub settings) that make this work:
+  - Require PR before merging (no direct pushes to `master`, including for admins)
   - Require 1 approving review minimum (2 for changes touching `auth/`, `common/middlewares/tenant-scoping`, or `db/repositories/` — the tenant-isolation-critical paths)
   - Require status checks to pass (lint, typecheck, unit tests, build) before merge is allowed
-  - Require branches to be up to date with `main` before merging (forces a rebase, catching conflicts before merge, not after)
+  - Require branches to be up to date with `master` before merging (forces a rebase, catching conflicts before merge, not after)
 
 ---
 
 ## 9. Release Strategy
 
-**Decision: Continuous deployment to a staging environment on every merge to `main`; explicit tagged releases for production.**
+**Decision: Continuous deployment to a staging environment on every merge to `master`; explicit tagged releases for production.**
 
 ```
-merge to main → CI/CD auto-builds Docker images → auto-deploys to staging
+merge to master → CI/CD auto-builds Docker images → auto-deploys to staging
                                                           │
                                      (manual QA / demo review on staging)
                                                           │
@@ -276,7 +276,7 @@ merge to main → CI/CD auto-builds Docker images → auto-deploys to staging
 
 ## 10. Hotfix Strategy
 
-**Decision: Dedicated `hotfix/` branch cut from `main` (or from the production tag if `main` has since diverged), fast-tracked review, back-merged immediately.**
+**Decision: Dedicated `hotfix/` branch cut from `master` (or from the production tag if `master` has since diverged), fast-tracked review, back-merged immediately.**
 
 ```
 production (v1.2.0) has a bug
@@ -287,19 +287,19 @@ git checkout -b hotfix/prod-jwt-refresh-race v1.2.0
     fix + test
         │
         ▼
-PR → main (expedited: 1 reviewer, same-day)
+PR → master (expedited: 1 reviewer, same-day)
         │
         ▼
 merge → tag v1.2.1 → deploy to production immediately
         │
-        └─→ if main has moved on, cherry-pick the hotfix commit forward to confirm no conflict
+        └─→ if master has moved on, cherry-pick the hotfix commit forward to confirm no conflict
 ```
 
 **Reasoning:**
-- Branching from the **production tag**, not from current `main`, matters because `main` may already contain unreleased work-in-progress from the current sprint — deploying a hotfix built on top of unfinished features would ship unvetted changes to production alongside the actual fix. This is the one case in this workflow where branching from something other than `main`'s tip is correct.
+- Branching from the **production tag**, not from current `master`, matters because `master` may already contain unreleased work-in-progress from the current sprint — deploying a hotfix built on top of unfinished features would ship unvetted changes to production alongside the actual fix. This is the one case in this workflow where branching from something other than `master`'s tip is correct.
 - "Expedited: 1 reviewer, same-day" is an explicit, named exception to the normal 1–2 reviewer standard — stated up front so that during an actual incident, nobody has to debate in the moment whether it's okay to move faster. Ambiguity during an incident costs time that matters.
 - The **patch version bump** (v1.2.0 → v1.2.1, Section 12) is automatic and unambiguous under semantic versioning specifically because hotfixes are, by definition, `fix` commits.
-- Explicitly forward-merging/cherry-picking into `main` prevents the classic hotfix bug: fixing production but silently losing the fix the next time `main` is deployed, because the fix only ever lived on a branch that was deleted after the hotfix deploy.
+- Explicitly forward-merging/cherry-picking into `master` prevents the classic hotfix bug: fixing production but silently losing the fix the next time `master` is deployed, because the fix only ever lived on a branch that was deleted after the hotfix deploy.
 
 ---
 
