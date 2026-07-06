@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { AppError } from "../errors/appError.js";
 
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, _req, res) => {
   if (err instanceof AppError) {
     const payload: Record<string, unknown> = {
       success: false,

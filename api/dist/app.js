@@ -6,7 +6,7 @@ import { validateRequest } from "./common/middlewares/validateRequest.js";
 const app = express();
 app.use(express.json());
 app.get("/", (_, res) => {
-    res.json({ message: "API is running now" });
+    res.json({ message: "API is running :)" });
 });
 if (process.env.NODE_ENV !== "production") {
     app.get("/boom", () => {
