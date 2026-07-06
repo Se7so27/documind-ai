@@ -558,104 +558,133 @@ export default function Home() {
 
     // --- Same interactive behavior as the standalone site (hero demo toggles,
     // scroll-reveal, and the flow-section citation animation) ---
-      /* ---------- Hero demo (auto-plays, toggles on click) ---------- */
-      const demos = [
-        {
-          label: "Grounded",
-          q: "\u201cWhat is our policy on carry-over leave?\u201d",
-          html: 'According to <span class="hl">HR Policy 2024</span>, employees may carry over a maximum of <span class="hl">five business days</span> of unused annual leave into the next fiscal year, provided it is used by the end of Q1.',
-          tag: '<div class="cite-tag">📄 <b>HR_Policy_2024.pdf</b> · page 14 · §12.4</div>',
-          dir: "ltr"
-        },
-        {
-          label: "Refusal",
-          q: "\u201cWhat's the remote-work equipment stipend?\u201d",
-          html: 'I couldn\u2019t find enough evidence in your uploaded documents to answer this confidently — <span class="hl">I don\u2019t want to guess</span>.',
-          tag: '<div class="refuse-tag">⚑ Logged as a knowledge gap for HR Admin</div>',
-          dir: "ltr"
-        },
-        {
-          label: "بالعربية",
-          q: "\u201cكم عدد أيام الإجازة السنوية المسموح ترحيلها؟\u201d",
-          html: 'وفقًا لسياسة الموارد البشرية 2024، يجوز للموظفين ترحيل <span class="hl">حتى خمسة أيام عمل</span> من رصيد الإجازة السنوية غير المستخدم إلى السنة المالية التالية.',
-          tag: '<div class="cite-tag">📄 <b>HR_Policy_2024.pdf</b> · صفحة 14 · القسم 12.4</div>',
-          dir: "rtl"
-        }
-      ];
+    /* ---------- Hero demo (auto-plays, toggles on click) ---------- */
+    const demos = [
+      {
+        label: "Grounded",
+        q: "\u201cWhat is our policy on carry-over leave?\u201d",
+        html: 'According to <span class="hl">HR Policy 2024</span>, employees may carry over a maximum of <span class="hl">five business days</span> of unused annual leave into the next fiscal year, provided it is used by the end of Q1.',
+        tag: '<div class="cite-tag">📄 <b>HR_Policy_2024.pdf</b> · page 14 · §12.4</div>',
+        dir: "ltr",
+      },
+      {
+        label: "Refusal",
+        q: "\u201cWhat's the remote-work equipment stipend?\u201d",
+        html: 'I couldn\u2019t find enough evidence in your uploaded documents to answer this confidently — <span class="hl">I don\u2019t want to guess</span>.',
+        tag: '<div class="refuse-tag">⚑ Logged as a knowledge gap for HR Admin</div>',
+        dir: "ltr",
+      },
+      {
+        label: "بالعربية",
+        q: "\u201cكم عدد أيام الإجازة السنوية المسموح ترحيلها؟\u201d",
+        html: 'وفقًا لسياسة الموارد البشرية 2024، يجوز للموظفين ترحيل <span class="hl">حتى خمسة أيام عمل</span> من رصيد الإجازة السنوية غير المستخدم إلى السنة المالية التالية.',
+        tag: '<div class="cite-tag">📄 <b>HR_Policy_2024.pdf</b> · صفحة 14 · القسم 12.4</div>',
+        dir: "rtl",
+      },
+    ];
 
-      const body = document.getElementById('demoBody');
-      const toggle = document.getElementById('demoToggle');
+    const body = document.getElementById("demoBody");
+    const toggle = document.getElementById("demoToggle");
 
-      function render(i){
-        const d = demos[i];
-        body.innerHTML = `
+    // Bail out early if either element is missing so everything below can
+    // safely assume both are non-null (TypeScript narrows on this guard).
+    if (!body || !toggle) {
+      return;
+    }
+
+    function render(i: number) {
+      const d = demos[i];
+      body!.innerHTML = `
           <div class="demo-q">▸ ${d.q}</div>
           <div class="demo-answer" dir="${d.dir}">${d.html}</div>
           ${d.tag}
         `;
-        body.querySelectorAll('.hl, .cite-tag, .refuse-tag').forEach(el=>{
-          el.style.animation = 'none';
+      body!
+        .querySelectorAll<HTMLElement>(".hl, .cite-tag, .refuse-tag")
+        .forEach((el) => {
+          el.style.animation = "none";
           void el.offsetWidth;
-          el.style.animation = '';
+          el.style.animation = "";
         });
-        [...toggle.children].forEach((btn, idx)=> btn.classList.toggle('active', idx===i));
-      }
+      [...toggle!.children].forEach((btn, idx) =>
+        btn.classList.toggle("active", idx === i),
+      );
+    }
 
-      demos.forEach((d,i)=>{
-        const btn = document.createElement('button');
-        btn.textContent = d.label;
-        btn.addEventListener('click', ()=>render(i));
-        toggle.appendChild(btn);
-      });
+    demos.forEach((d, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = d.label;
+      btn.addEventListener("click", () => render(i));
+      toggle.appendChild(btn);
+    });
 
-      render(0);
+    render(0);
 
-      /* ---------- Generic reveal-on-scroll ---------- */
-      const revealables = document.querySelectorAll('.feature-card, .crew-card, .pstep');
-      revealables.forEach(el=>{ el.style.opacity=0; el.style.transform='translateY(14px)'; el.style.transition='opacity .5s ease, transform .5s ease'; });
-      const io = new IntersectionObserver((entries)=>{
-        entries.forEach(e=>{
-          if(e.isIntersecting){
-            e.target.style.opacity=1;
-            e.target.style.transform='translateY(0)';
+    /* ---------- Generic reveal-on-scroll ---------- */
+    const revealables = document.querySelectorAll<HTMLElement>(
+      ".feature-card, .crew-card, .pstep",
+    );
+    revealables.forEach((el) => {
+      el.style.opacity = "0";
+      el.style.transform = "translateY(14px)";
+      el.style.transition = "opacity .5s ease, transform .5s ease";
+    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const target = e.target as HTMLElement;
+            target.style.opacity = "1";
+            target.style.transform = "translateY(0)";
             io.unobserve(e.target);
           }
         });
-      }, {threshold:0.15});
-      revealables.forEach(el=>io.observe(el));
+      },
+      { threshold: 0.15 },
+    );
+    revealables.forEach((el) => io.observe(el));
 
-      /* ---------- Flow section: staggered step reveal per lane ---------- */
-      document.querySelectorAll('.flow-lane').forEach(lane=>{
-        const steps = lane.querySelectorAll('.flow-step');
-        const laneObserver = new IntersectionObserver((entries)=>{
-          entries.forEach(entry=>{
-            if(entry.isIntersecting){
-              steps.forEach((step, idx)=>{
-                setTimeout(()=>{
-                  step.style.opacity = 1;
-                  step.style.transform = 'translateY(0)';
-                  step.classList.add('on');
-                }, idx*160);
+    /* ---------- Flow section: staggered step reveal per lane ---------- */
+    document.querySelectorAll<HTMLElement>(".flow-lane").forEach((lane) => {
+      const steps = lane.querySelectorAll<HTMLElement>(".flow-step");
+      const laneObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              steps.forEach((step, idx) => {
+                setTimeout(() => {
+                  step.style.opacity = "1";
+                  step.style.transform = "translateY(0)";
+                  step.classList.add("on");
+                }, idx * 160);
               });
               laneObserver.unobserve(entry.target);
             }
           });
-        }, {threshold:0.25});
-        laneObserver.observe(lane);
-      });
+        },
+        { threshold: 0.25 },
+      );
+      laneObserver.observe(lane);
+    });
 
-      /* ---------- Flow bubble: reveal + replay the citation-highlight animation ---------- */
-      const flowBubble = document.getElementById('flowBubble');
-      const bubbleObserver = new IntersectionObserver((entries)=>{
-        entries.forEach(entry=>{
-          if(entry.isIntersecting){
-            entry.target.classList.add('on');
-            setTimeout(()=> entry.target.classList.add('play'), 500);
-            bubbleObserver.unobserve(entry.target);
-          }
-        });
-      }, {threshold:0.4});
+    /* ---------- Flow bubble: reveal + replay the citation-highlight animation ---------- */
+    const flowBubble = document.getElementById("flowBubble");
+    if (flowBubble) {
+      const bubbleObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const target = entry.target as HTMLElement;
+              target.classList.add("on");
+              setTimeout(() => target.classList.add("play"), 500);
+              bubbleObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.4 },
+      );
       bubbleObserver.observe(flowBubble);
+    }
 
     return () => {
       document.head.removeChild(preconnect1);
