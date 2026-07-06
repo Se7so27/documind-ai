@@ -2,42 +2,40 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [master]
   pull_request:
-    branches: [main, dev]
+    branches: [master]
 
 jobs:
   ci:
-    name: Lint, Typecheck & Build
+    name: Lint, Typecheck, Test & Build
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
           cache: npm
 
       - name: Install dependencies (workspaces)
         run: npm install --workspaces --include-workspace-root
 
+      - name: Lint
+        run: npm run lint
+
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Lint
-        run: npm run lint
-        continue-on-error: true
+      - name: Run tests
+        run: npm run test --workspaces --if-present
 
       - name: Build
         run: npm run build
-
-      - name: Run tests
-        run: npm run test
-        continue-on-error: true
+        env:
+          # CI-only placeholder so `next build` never fails on a missing env var.
+          # The REAL value is set in the Vercel dashboard for actual deployments.
+          NEXT_PUBLIC_API_URL: http://localhost:5000

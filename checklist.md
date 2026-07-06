@@ -26,7 +26,7 @@ Converted from the full technical task breakdown. All issues assigned across the
 | **Labels** | `full-stack`, `epic-1`, `f1.1` |
 | **Epic** | EPIC 1 — Platform Foundation & Infrastructure |
 | **Dependencies** | — |
-| **Checklist** | - [ ] Branch created from `main` (`feature/t1.1.1`)<br>- [ ] Implementation complete<br>- [ ] Unit/integration tests written (where applicable)<br>- [ ] Manually verified against acceptance criteria<br>- [ ] Code reviewed by at least one other developer<br>- [ ] Documentation/comments updated<br>- [ ] Merged and deployed to dev environment |
+| **Checklist** | - [x] Branch created from `main` (`2-t111-initialize-monorepo-structure-frontend-backend-workers`)<br>- [x] Implementation complete<br>- [x] Unit/integration tests written (where applicable) — N/A for scaffolding; verified via `npm run typecheck`<br>- [x] Manually verified against acceptance criteria<br>- [ ] Code reviewed by at least one other developer<br>- [x] Documentation/comments updated<br>- [ ] Merged and deployed to dev environment |
 | **Definition of Done** | Code merged to main, passes CI, meets acceptance criteria, reviewed and approved via PR, no known regressions. |
 | **Assignee** | Mahmoud Ramadan |
 

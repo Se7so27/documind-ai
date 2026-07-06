@@ -8,7 +8,7 @@ services:
     env_file:
       - ./api/.env
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/docsai
+      - MONGODB_URI=mongodb://mongodb:27017/docsai
       - REDIS_URL=redis://redis:6379
     depends_on:
       mongodb:
@@ -45,7 +45,7 @@ services:
     env_file:
       - ./workers/.env
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/docsai
+      - MONGODB_URI=mongodb://mongodb:27017/docsai
       - REDIS_URL=redis://redis:6379
 
   redis:
