@@ -5,10 +5,13 @@ import { errorHandlerMiddleware } from "./common/middlewares/errorHandler.middle
 import { notFoundMiddleware } from "./common/middlewares/notFound.middleware.js";
 import { validateRequest } from "./common/middlewares/validateRequest.js";
 import { config } from "./config/index.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 
 const app = express();
 
 app.use(express.json());
+
+app.use("/auth", authRoutes);
 
 app.get("/", (_, res) => {
   res.json({ message: "API is running :)" });

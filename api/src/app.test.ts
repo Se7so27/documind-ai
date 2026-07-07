@@ -1,10 +1,14 @@
-import test from "node:test";
+import test, { after, before, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
+import mongoose from "mongoose";
 
 process.env.NODE_ENV = "test";
 
 import app from "./app.js";
+import { connectDB } from "./db/connection.js";
+import TenantModel from "./db/models/tenant.model.js";
+import UserModel from "./db/models/user.model.js";
 
 function createServer() {
   return new Promise<ReturnType<typeof app.listen>>((resolve) => {
@@ -17,6 +21,127 @@ function closeServer(server: ReturnType<typeof app.listen>) {
     server.close((err) => (err ? reject(err) : resolve()));
   });
 }
+
+before(async () => {
+  await connectDB();
+});
+
+beforeEach(async () => {
+  await TenantModel.deleteMany({});
+  await UserModel.deleteMany({});
+});
+
+after(async () => {
+  await mongoose.disconnect();
+});
+
+test("registers a tenant and first company admin", async () => {
+  const server = await createServer();
+
+  try {
+    const address = server.address() as AddressInfo;
+    const response = await fetch(`http://127.0.0.1:${address.port}/auth/register`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        companyName: "Acme Consulting",
+        companySlug: "acme-consulting",
+        adminName: "Sarah Ahmed",
+        email: "sarah@acme.com",
+        password: "StrongPass123!",
+      }),
+    });
+    const body = (await response.json()) as {
+      success: boolean;
+      data: {
+        tenant: { id: string; name: string; slug: string; status: string; plan: string };
+        user: { id: string; tenantId: string; name: string; email: string; role: string; status: string };
+      };
+    };
+
+    assert.equal(response.status, 201);
+    assert.equal(body.success, true);
+    assert.equal(body.data.tenant.name, "Acme Consulting");
+    assert.equal(body.data.tenant.slug, "acme-consulting");
+    assert.equal(body.data.user.role, "COMPANY_ADMIN");
+    assert.equal(body.data.user.email, "sarah@acme.com");
+    assert.equal(typeof body.data.user.tenantId, "string");
+    assert.equal("passwordHash" in body.data.user, false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("rejects missing companyName", async () => {
+  const server = await createServer();
+
+  try {
+    const address = server.address() as AddressInfo;
+    const response = await fetch(`http://127.0.0.1:${address.port}/auth/register`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        companySlug: "acme-consulting",
+        adminName: "Sarah Ahmed",
+        email: "sarah@acme.com",
+        password: "StrongPass123!",
+      }),
+    });
+    const body = (await response.json()) as { success: boolean; error: { code: string } };
+
+    assert.equal(response.status, 400);
+    assert.equal(body.success, false);
+    assert.equal(body.error.code, "VALIDATION_ERROR");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("rejects duplicate tenant slugs", async () => {
+  const server = await createServer();
+
+  try {
+    const address = server.address() as AddressInfo;
+    const first = await fetch(`http://127.0.0.1:${address.port}/auth/register`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        companyName: "Acme Consulting",
+        companySlug: "acme-consulting",
+        adminName: "Sarah Ahmed",
+        email: "sarah@acme.com",
+        password: "StrongPass123!",
+      }),
+    });
+    const second = await fetch(`http://127.0.0.1:${address.port}/auth/register`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        companyName: "Acme Consulting",
+        companySlug: "acme-consulting",
+        adminName: "Jane Smith",
+        email: "jane@acme.com",
+        password: "StrongPass123!",
+      }),
+    });
+
+    assert.equal(first.status, 201);
+    assert.equal(second.status, 409);
+    const body = (await second.json()) as { success: boolean; error: { code: string } };
+    assert.equal(body.success, false);
+    assert.equal(body.error.code, "TENANT_ALREADY_EXISTS");
+  } finally {
+    await closeServer(server);
+  }
+});
 
 test("returns a standardized error envelope for handled errors", async () => {
   const server = await createServer();
